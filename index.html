@@ -1,0 +1,534 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>서구 청년 멘토링 시스템</title>
+  <style>
+    :root {
+      --purple: #6d28d9;
+      --purple-600: #7c3aed;
+      --bg: #f9fafb;
+      --text: #333;
+      --muted: #6b7280;
+      --border: #e5e7eb;
+      --chip: #ede9fe;
+      --card: #ffffff;
+    }
+    * { box-sizing: border-box; }
+    html, body { margin:0; padding:0; background:var(--bg); color:var(--text); font-family: "Pretendard", "Noto Sans KR", system-ui, -apple-system, Segoe UI, Roboto, sans-serif; }
+
+    /* Header / Nav */
+    .header {
+      background: linear-gradient(135deg, var(--purple-600), var(--purple));
+      color:#fff;
+      padding: 28px 16px 18px;
+      border-bottom-left-radius: 36px;
+      border-bottom-right-radius: 36px;
+      text-align: center;
+      position: sticky; top:0; z-index: 10;
+    }
+    .title { margin: 0 0 10px; font-size: 1.9rem; font-weight: 900; letter-spacing: -0.4px; }
+    .nav {
+      display:flex; justify-content:center; flex-wrap:wrap; gap:10px;
+    }
+    .nav button {
+      background: transparent; border: 2px solid #ffffff66; color:#fff;
+      padding: 9px 14px; border-radius: 12px; font-weight: 800; cursor:pointer; transition:.2s;
+    }
+    .nav button:hover, .nav button.active { background:#fff; color: var(--purple); border-color:#fff; }
+
+    /* Main layout */
+    .container { max-width: 980px; margin: 24px auto; padding: 0 16px; }
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      box-shadow: 0 8px 24px rgba(0,0,0,.06);
+      padding: 18px 16px;
+      margin-bottom: 16px;
+    }
+    h2 { margin: 6px 0 14px; color: var(--purple); font-size: 1.4rem; }
+    p.muted { color: var(--muted); margin: 4px 0 14px; }
+
+    /* Tabs */
+    .tab { display: none; opacity: 0; transition: opacity .28s ease; }
+    .tab.active { display: block; opacity: 1; }
+
+    /* Form Grid */
+    .form-grid { display:grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .form-grid .full { grid-column: 1 / -1; }
+    label { display:flex; flex-direction: column; font-weight: 800; color:#222; }
+    input, select, textarea {
+      margin-top: 8px;
+      border: 1.5px solid var(--border);
+      border-radius: 12px;
+      padding: 12px;
+      font-size: 1rem;
+      transition: .2s;
+      background:#fff;
+    }
+    input:focus, select:focus, textarea:focus {
+      outline:none; border-color: var(--purple-600);
+      box-shadow: 0 0 0 3px rgba(124,58,237,.14);
+    }
+    .hint { font-size: .9rem; color: var(--muted); margin-top: 6px; }
+
+    /* Buttons */
+    .btn-primary {
+      background: var(--purple); color:#fff; border:none;
+      padding: 12px 14px; border-radius: 12px; font-weight: 900; cursor:pointer; transition:.2s;
+    }
+    .btn-primary:hover { background: var(--purple-600); }
+    .btn-outline {
+      background: #fff; color: var(--purple);
+      border: 2px solid var(--purple);
+      padding: 10px 14px; border-radius: 12px; font-weight: 900; cursor:pointer;
+    }
+    .actions { display:flex; flex-wrap: wrap; gap: 10px; }
+
+    /* Date chips / Time buttons */
+    .weekday-chips { display:flex; gap:6px; flex-wrap:wrap; margin-top: 8px; }
+    .chip {
+      background: #f3f4f6; color:#374151;
+      border-radius: 999px; padding: 4px 10px; font-size: .86rem; font-weight: 800;
+      border: 1px solid #e5e7eb;
+    }
+    .chip.on { background: var(--chip); color: #4c1d95; border-color: #d9ccff; }
+
+    .time-grid { display:flex; gap: 8px; flex-wrap: wrap; margin-top: 8px; }
+    .time-btn {
+      border: 1.5px solid var(--border); background:#fff; padding: 8px 12px;
+      border-radius: 10px; cursor:pointer; font-weight: 800;
+    }
+    .time-btn.active { background: var(--purple); color:#fff; border-color: var(--purple); }
+    .time-btn[disabled] { opacity:.45; cursor:not-allowed; }
+
+    /* Lists */
+    .list { display:flex; flex-direction: column; gap: 10px; margin-top:10px; }
+    .item { border: 1px solid var(--border); border-radius: 14px; padding: 12px; background:#fff; }
+    .badge { display:inline-block; background: var(--chip); color:#4c1d95; border-radius:999px; padding: 2px 8px; font-size:.86rem; font-weight:900; }
+
+    /* Footer */
+    .footer { text-align:center; color:#666; padding: 18px 0 36px; font-size:.92rem; }
+
+    @media (max-width: 680px) {
+      .form-grid { grid-template-columns: 1fr; }
+      .nav button { padding: 8px 12px; }
+    }
+  </style>
+</head>
+<body>
+  <header class="header">
+    <h1 class="title">서구 청년 멘토링 시스템</h1>
+    <nav class="nav">
+      <button class="active" data-tab="apply">신청하기</button>
+      <button data-tab="check">신청확인</button>
+      <button data-tab="mentor">멘토페이지</button>
+      <button data-tab="admin">관리자페이지</button>
+    </nav>
+  </header>
+
+  <main class="container">
+    <!-- 신청하기 -->
+    <section id="apply" class="tab active">
+      <div class="card">
+        <h2>멘토링 신청</h2>
+        <p class="muted">항목을 정확히 입력해 주세요. (모바일에서 2열 → 1열로 자동 전환)</p>
+        <form id="applyForm" class="form-grid">
+          <!-- 이름 / 연락처 -->
+          <label>이름
+            <input type="text" name="name" required />
+          </label>
+          <label>연락처
+            <input type="tel" name="phone" inputmode="tel" placeholder="010-0000-0000" required />
+          </label>
+
+          <!-- 생년월일 / 주소 -->
+          <label>생년월일
+            <input type="text" name="birthdate" placeholder="YYYY-MM-DD" oninput="formatBirthdate(this)" maxlength="10" required />
+            <span class="hint">입력 시 자동으로 YYYY-MM-DD 형식으로 맞춰집니다.</span>
+          </label>
+          <label>주소
+            <input type="text" name="address" placeholder="거주지 기준으로 입력 (예: 광주 서구)" />
+          </label>
+
+          <!-- 분야 / 멘토 -->
+          <label>멘토링 분야
+            <select id="mentorField" name="mentorField" required></select>
+          </label>
+          <label>멘토
+            <select id="mentorName" name="mentorName" required></select>
+          </label>
+
+          <!-- 날짜 / 시간 -->
+          <label>멘토링 날짜
+            <input type="date" id="mentoringDate" name="date" required />
+            <div id="weekdayChips" class="weekday-chips"></div>
+            <span class="hint">파란 칩(가능 요일) 중에서 선택해야 합니다.</span>
+          </label>
+          <label>멘토링 시간
+            <div id="timeButtons" class="time-grid"></div>
+            <input type="hidden" id="timeHidden" name="time" required />
+          </label>
+
+          <!-- 내용 / 비밀번호 -->
+          <label class="full">멘토링 내용
+            <textarea name="content" rows="3" placeholder="멘토링을 신청하는 이유를 간략히 적어주세요" required></textarea>
+          </label>
+          <label>비밀번호(6자리)
+            <input type="password" name="password" minlength="6" maxlength="6" pattern="\d{6}" required />
+          </label>
+          <div></div>
+
+          <button type="submit" class="btn-primary full">신청하기</button>
+        </form>
+      </div>
+    </section>
+
+    <!-- 신청확인 -->
+    <section id="check" class="tab">
+      <div class="card">
+        <h2>신청 내역 확인 / 수정</h2>
+        <p class="muted">연락처와 비밀번호로 본인 신청 내역을 조회합니다.</p>
+        <form id="findForm" class="form-grid">
+          <label>연락처
+            <input type="tel" name="phone" required />
+          </label>
+          <label>비밀번호
+            <input type="password" name="password" minlength="6" maxlength="6" required />
+          </label>
+          <div></div><div></div>
+          <button class="btn-outline full" type="submit">조회</button>
+        </form>
+        <div id="myList" class="list"></div>
+      </div>
+    </section>
+
+    <!-- 멘토페이지 (스켈레톤) -->
+    <section id="mentor" class="tab">
+      <div class="card">
+        <h2>멘토 로그인</h2>
+        <label>멘토 코드
+          <input type="text" id="mentorCode" placeholder="예: mentor001" />
+        </label>
+        <div class="actions">
+          <button id="mentorLoginBtn" class="btn-primary">로그인</button>
+        </div>
+        <p class="muted">로그인 후 본인에게 들어온 신청 목록과 필터 기능을 확장할 수 있습니다.</p>
+      </div>
+    </section>
+
+    <!-- 관리자페이지 -->
+    <section id="admin" class="tab">
+      <div class="card" id="adminCard">
+        <h2>관리자 로그인</h2>
+        <label>관리자 코드
+          <input type="password" id="adminCode" placeholder="예: admin123" />
+        </label>
+        <div class="actions">
+          <button id="adminLoginBtn" class="btn-primary">접속</button>
+        </div>
+        <p class="muted">접속 후 신청/멘토/설정을 관리하는 화면이 표시됩니다.</p>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    © 2025 서구 청년센터 · 문의: youth@seogu.go.kr
+  </footer>
+
+  <script>
+    // ======= CONFIG =======
+    const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbymKD3skM48nM3TonPWiK56FW0U1i7KZ3NIFoyHYly4domRuj4b8impdNpLB6wObxgp/exec';
+
+    // ======= NAV =======
+    document.querySelectorAll('.nav button').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const tab = btn.dataset.tab;
+        document.querySelectorAll('.nav button').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        document.querySelectorAll('.tab').forEach(s => s.classList.remove('active'));
+        document.getElementById(tab).classList.add('active');
+      });
+    });
+
+    // ======= BIRTHDATE AUTO-FORMAT =======
+    function formatBirthdate(input) {
+      let v = input.value.replace(/[^0-9]/g, '');
+      if (v.length >= 4) v = v.slice(0,4) + '-' + v.slice(4);
+      if (v.length >= 7) v = v.slice(0,7) + '-' + v.slice(7, 10);
+      input.value = v.slice(0, 10);
+    }
+
+    // ======= GLOBAL STATE =======
+    let mentors = [];    // {id, name, field, code, availableDays, availableTimes}
+    let selectedMentor = null;
+
+    // ======= LOAD MENTORS =======
+    async function fetchMentors() {
+      try {
+        const res = await fetch(WEB_APP_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ action: 'listMentors' })
+        });
+        mentors = await res.json();
+        populateFields();
+      } catch (e) {
+        console.error('멘토 불러오기 실패', e);
+      }
+    }
+
+    function populateFields() {
+      const fieldSelect = document.getElementById('mentorField');
+      const mentorSelect = document.getElementById('mentorName');
+      const fields = [...new Set(mentors.map(m => m.field).filter(Boolean))];
+      fieldSelect.innerHTML = '<option value="">선택</option>' + fields.map(f => `<option value="${f}">${f}</option>`).join('');
+      mentorSelect.innerHTML = '<option value="">선택</option>';
+    }
+
+    document.getElementById('mentorField').addEventListener('change', () => {
+      const field = document.getElementById('mentorField').value;
+      const list = mentors.filter(m => m.field === field);
+      const mentorSelect = document.getElementById('mentorName');
+      mentorSelect.innerHTML = '<option value="">선택</option>' + list.map(m => `<option value="${m.name}" data-id="${m.id}">${m.name}</option>`).join('');
+      selectedMentor = null;
+      renderWeekdayChips([]);
+      renderTimeButtons([]);
+      document.getElementById('mentoringDate').value = '';
+      document.getElementById('timeHidden').value = '';
+    });
+
+    document.getElementById('mentorName').addEventListener('change', () => {
+      const field = document.getElementById('mentorField').value;
+      const name = document.getElementById('mentorName').value;
+      selectedMentor = mentors.find(m => m.field === field && m.name === name) || null;
+      const days = safeParseArray(selectedMentor?.availableDays);
+      const times = safeParseArray(selectedMentor?.availableTimes);
+      renderWeekdayChips(days);
+      renderTimeButtons(times);
+    });
+
+    function safeParseArray(v) {
+      if (Array.isArray(v)) return v;
+      if (typeof v === 'string') { try { return JSON.parse(v); } catch { return []; } }
+      return [];
+    }
+
+    // ======= WEEKDAY CHIPS & DATE VALIDATION =======
+    const weekdayMap = ['일','월','화','수','목','금','토'];
+    function renderWeekdayChips(days) {
+      const box = document.getElementById('weekdayChips');
+      box.innerHTML = weekdayMap.map((w, i) => `<span class="chip ${days.includes(i) ? 'on' : ''}">${w}</span>`).join('');
+    }
+
+    document.getElementById('mentoringDate').addEventListener('change', (e) => {
+      if (!selectedMentor) return;
+      const days = safeParseArray(selectedMentor.availableDays);
+      const d = new Date(e.target.value);
+      const dow = d.getDay();
+      if (!days.includes(dow)) {
+        alert('해당 멘토는 이 요일에 멘토링을 제공하지 않습니다. 파란 칩 요일 중에서 선택하세요.');
+        e.target.value = '';
+      }
+    });
+
+    // ======= TIME BUTTONS =======
+    function renderTimeButtons(times) {
+      const box = document.getElementById('timeButtons');
+      const hidden = document.getElementById('timeHidden');
+      hidden.value = '';
+      if (!times || times.length === 0) {
+        box.innerHTML = '<span class="hint">해당 멘토의 가능 시간이 없습니다.</span>';
+        return;
+      }
+      const norm = times.map(t => (typeof t === 'number' ? String(t).padStart(2,'0')+':00' : t));
+      box.innerHTML = norm.map(t => `<button type="button" class="time-btn" data-time="${t}">${t}</button>`).join('');
+      box.querySelectorAll('.time-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          box.querySelectorAll('.time-btn').forEach(b => b.classList.remove('active'));
+          btn.classList.add('active');
+          hidden.value = btn.dataset.time;
+        });
+      });
+    }
+
+    // ======= SUBMIT APPLICATION =======
+    document.getElementById('applyForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const fd = Object.fromEntries(new FormData(e.target).entries());
+      if (!selectedMentor) { alert('멘토를 선택해 주세요.'); return; }
+
+      const payload = {
+        action: 'add',
+        id: Date.now(),
+        name: fd.name,
+        phone: fd.phone,
+        birthdate: fd.birthdate,
+        address: fd.address,
+        mentorField: fd.mentorField,
+        mentorId: selectedMentor.id || '',
+        mentorName: fd.mentorName,
+        date: fd.date,
+        time: fd.time,
+        content: fd.content,
+        password: fd.password
+      };
+
+      try {
+        await fetch(WEB_APP_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        alert('✅ 신청이 완료되었습니다! 멘토 확인 전까지 수정 가능합니다.');
+        e.target.reset();
+        selectedMentor = null;
+        renderWeekdayChips([]);
+        renderTimeButtons([]);
+      } catch (err) {
+        console.error(err);
+        alert('⚠️ 전송 오류가 발생했습니다. 잠시 후 다시 시도해 주세요.');
+      }
+    });
+
+    // ======= FIND MY APPLICATIONS =======
+    document.getElementById('findForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const fd = Object.fromEntries(new FormData(e.target).entries());
+      const box = document.getElementById('myList');
+      box.innerHTML = '불러오는 중...';
+      try {
+        const res = await fetch(WEB_APP_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ action: 'listMy', phone: fd.phone, password: fd.password })
+        });
+        const data = await res.json();
+        if (!Array.isArray(data) || data.length === 0) { box.innerHTML = '<div class="item">일치하는 신청 내역이 없습니다.</div>'; return; }
+        box.innerHTML = '';
+        data.forEach(app => box.appendChild(renderAppItem(app)));
+      } catch (e2) {
+        console.error(e2);
+        box.innerHTML = '<div class="item">조회 중 오류가 발생했습니다.</div>';
+      }
+    });
+
+    function renderAppItem(app) {
+      const item = document.createElement('div');
+      item.className = 'item';
+      item.innerHTML = `
+        <div style="display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap;margin-bottom:6px">
+          <strong>${app.name}</strong>
+          <span class="badge">${visibleStatus(app.status)}</span>
+        </div>
+        <div style="display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap;margin-bottom:6px">
+          <span>${app.mentorField} / ${app.mentorName}</span>
+          <span>${app.date} ${app.time}</span>
+        </div>
+        <div style="color:#374151;white-space:pre-wrap">${app.content || ''}</div>
+        <div class="actions" style="margin-top:10px"></div>
+      `;
+      const actions = item.querySelector('.actions');
+      const canEdit = ['신청대기','신청완료','협의중','협의완료'].includes(app.status || '신청대기');
+      if (canEdit) {
+        const bEdit = document.createElement('button');
+        bEdit.className = 'btn-outline';
+        bEdit.textContent = '날짜/시간 수정';
+        bEdit.addEventListener('click', () => editApp(app));
+        actions.appendChild(bEdit);
+      } else {
+        const note = document.createElement('span');
+        note.className = 'hint';
+        note.textContent = '멘토링완료 이후에는 수정이 불가합니다.';
+        actions.appendChild(note);
+      }
+      return item;
+    }
+
+    function visibleStatus(s) {
+      const allowed = ['신청대기','신청완료','협의중','협의완료','멘토링완료'];
+      return allowed.includes(s) ? s : '멘토링완료';
+    }
+
+    async function editApp(app) {
+      const nd = prompt('새 날짜(YYYY-MM-DD)', app.date); if (!nd) return;
+      const nt = prompt('새 시간(HH:MM)', app.time); if (!nt) return;
+      try {
+        await fetch(WEB_APP_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            action: 'update',
+            id: app.id, phone: app.phone, password: app.password,
+            date: nd, time: nt
+          })
+        });
+        alert('✅ 수정되었습니다. 다시 조회해 주세요.');
+        document.getElementById('findForm').dispatchEvent(new Event('submit'));
+      } catch (e) {
+        console.error(e);
+        alert('⚠️ 수정 중 오류가 발생했습니다.');
+      }
+    }
+
+    // ======= ADMIN LOGIN + LIST =======
+    document.getElementById('adminLoginBtn').addEventListener('click', async () => {
+      const code = document.getElementById('adminCode').value.trim();
+      if (!code) return alert('관리자 코드를 입력해주세요.');
+      try {
+        const res = await fetch(WEB_APP_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ action: 'getAdminCode' })
+        });
+        const data = await res.json();
+        const adminCode = (data && data.adminCode) || 'admin123';
+        if (code !== adminCode) { alert('❌ 관리자 코드가 올바르지 않습니다.'); return; }
+        // 로그인 성공 → 대시보드 로드
+        loadAdminDashboard();
+      } catch (e) {
+        console.error(e);
+        alert('⚠️ 관리자 인증 중 오류가 발생했습니다.');
+      }
+    });
+
+    async function loadAdminDashboard() {
+      const adminCard = document.getElementById('adminCard');
+      adminCard.innerHTML = `<h2>신청 관리</h2><p class="muted">데이터 불러오는 중…</p>`;
+      try {
+        const res = await fetch(WEB_APP_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ action: 'listApplications' })
+        });
+        const apps = await res.json();
+        const listHtml = (Array.isArray(apps) ? apps : []).map(a => `
+          <div class="item">
+            <div style="display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap">
+              <strong>${a.name}</strong>
+              <span class="badge">${visibleStatus(a.status)}</span>
+            </div>
+            <div style="display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap;margin-top:6px">
+              <span>${a.mentorField} / ${a.mentorName}</span>
+              <span>${a.date} ${a.time}</span>
+            </div>
+            <div class="hint" style="margin-top:6px">${a.phone} · ${a.birthdate} · ${a.address}</div>
+          </div>
+        `).join('');
+        adminCard.innerHTML = `
+          <h2>신청 관리</h2>
+          <div class="list">${listHtml || '<div class="item">신청 데이터가 없습니다.</div>'}</div>
+        `;
+      } catch (e) {
+        console.error(e);
+        adminCard.innerHTML = `<h2>신청 관리</h2><div class="item">불러오는 중 오류가 발생했습니다.</div>`;
+      }
+    }
+
+    // ======= INIT =======
+    fetchMentors();
+  </script>
+</body>
+</html>
