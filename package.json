@@ -1,0 +1,1 @@
+{"name":"jusa-firebase-live","private":true,"scripts":{"test:rules":"firebase emulators:exec --project demo-jusa --only firestore 'node rules.test.cjs'"},"devDependencies":{"@firebase/rules-unit-testing":"4.0.1","firebase":"11.10.0","firebase-tools":"14.7.0","jsdom":"^26.1.0"}}
